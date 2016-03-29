@@ -47,7 +47,6 @@ def reviewHandler(persistent, hotel_url, keyword, response):
 	partials = [x.text for x in soup('p', {'class': 'partial_entry'}) if x.parent['class'][0] == 'entry']
 	urls = [x['href'] for x in soup('a', {'class': 'pageNum taLnk'})]
 
-	http_client_2 = httpclient.HTTPClient()
 	try:
 		for url in urls:
 			url = 'https://www.tripadvisor.com' + url
@@ -105,19 +104,17 @@ def getReviews(keyword, place, entityType):
 	persistent['i'] = 0
 	persistent['urls'] = urls
 
-	for offset in xrange(30, maxOffset+1, 30):
-		persistent['i'] += 1
-		binding = functools.partial(hotelHandler, persistent)
-		url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
-		print url
-		http_client.fetch(url, binding)
+	# for offset in xrange(30, maxOffset+1, 30):
+	# 	persistent['i'] += 1
+	# 	binding = functools.partial(hotelHandler, persistent)
+	# 	url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
+	# 	print url
+	# 	http_client.fetch(url, binding)
 
-	ioloop.IOLoop.instance().start()
+	# ioloop.IOLoop.instance().start()
 	print 'Hotels Fetched'
 
 	http_client = httpclient.AsyncHTTPClient()
-	http_client.configure(None, defaults=dict(user_agent="Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36",
-                                                  connect_timeout=200,request_timeout=200, validate_cert=False))
 
 	persistent['i'] = 0
 	persistent['results'] = {}
@@ -146,3 +143,5 @@ def main(keyword, place, entityType = 'HOTEL'):
 	else:
 		getReviews(keyword, place, entityType)
 		return reviews_db.find({'keyword': keyword.lower(), 'place': place.lower()})
+
+main('swimming pool', 'chicago')
