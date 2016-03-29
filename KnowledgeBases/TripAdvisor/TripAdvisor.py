@@ -61,14 +61,14 @@ def reviewHandler(persistent, hotel_url, keyword, response):
 	except:
 		import traceback; traceback.print_exc();
 
-	persistent['results'][hotel_url] = {}
-	persistent['results'][hotel_url]['reviews'] = []
+	persistent['results'][name] = {}
+	persistent['results'][name]['reviews'] = []
 	print len(partials)
 	for x in xrange(0, len(partials)):
 		data = {'review': partials[x], 'rating': ratings[x], 'ratingDates': ratingDates[x]}
-		persistent['results'][hotel_url]['reviews'].append(data)
+		persistent['results'][name]['reviews'].append(data)
 
-	persistent['results'][hotel_url]['name'] = name
+	persistent['results'][name]['url'] = hotel_url
 
 def getReviews(keyword, place, entityType):
 	if place_db.count({'place': place}) == 0:
@@ -116,6 +116,9 @@ def getReviews(keyword, place, entityType):
 	print 'Hotels Fetched'
 
 	http_client = httpclient.AsyncHTTPClient()
+	http_client.configure(None, defaults=dict(user_agent="Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36",
+                                                  connect_timeout=200,request_timeout=200, validate_cert=False))
+
 	persistent['i'] = 0
 	persistent['results'] = {}
 
@@ -131,7 +134,7 @@ def getReviews(keyword, place, entityType):
 
 	from pprint import pprint
 	pprint(persistent)
-	db.insert_one({'keyword': keyword, 'place': place, 'results': persistent['results']})
+	reviews_db.insert_one({'keyword': keyword, 'place': place, 'results': persistent['results']})
 
 
 def main(keyword, place, entityType = 'HOTEL'):
@@ -143,5 +146,3 @@ def main(keyword, place, entityType = 'HOTEL'):
 	else:
 		getReviews(keyword, place, entityType)
 		return reviews_db.find({'keyword': keyword.lower(), 'place': place.lower()})
-
-main('swimming pool', 'chicago')
