@@ -47,23 +47,23 @@ def reviewHandler(persistent, hotel_url, keyword, response):
 	partials = [x.text for x in soup('p', {'class': 'partial_entry'}) if x.parent['class'][0] == 'entry']
 	urls = [x['href'] for x in soup('a', {'class': 'pageNum taLnk'})]
 
-	http_client_2 = httpclient.AsyncHTTPClient()
+	http_client_2 = httpclient.HTTPClient()
 	try:
 		for url in urls:
 			url = 'https://www.tripadvisor.com' + url
 			data = {'askForConfirmation': 'false', 'mode': 'filterReviews', 'q': keyword, 'returnTo': url}
-			response = requests.post(url, data=data)
-			soup = BeautifulSoup(response.text)
+			response = http_client_2.fetch(url, body=urlencode(data), method="POST")
+			soup = BeautifulSoup(response.body)
 			ratings = ratings +  [x['alt'] for x in soup('img', {'class': 'sprite-rating_s_fill'})]
 			ratingDates = ratingDates + [x.text for x in soup('span', {'class': 'ratingDate'})]
 			partials = partials + [x.text for x in soup('p', {'class': 'partial_entry'}) if x.parent['class'][0] == 'entry']
 
 	except:
-		pass
+		import traceback; traceback.print_exc();
 
 	persistent['results'][hotel_url] = {}
 	persistent['results'][hotel_url]['reviews'] = []
-
+	print len(partials)
 	for x in xrange(0, len(partials)):
 		data = {'review': partials[x], 'rating': ratings[x], 'ratingDates': ratingDates[x]}
 		persistent['results'][hotel_url]['reviews'].append(data)
