@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from tornado import ioloop, httpclient
 import functools
 from urllib import quote, urlencode
+from datetime import datetime
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client.Bro
@@ -11,9 +12,6 @@ reviews_db = db.tripadvisor
 place_db = db.tripadvisor
 
 def moreReviewHandler(persistent, name, response):
-	print 'more review handler %d' %response.code
-	print response.effective_url
-
 	persistent['i'] -= 1
 	if response.code != 200:
 		return
@@ -27,15 +25,12 @@ def moreReviewHandler(persistent, name, response):
 	ratingDates = [x.text for x in soup('span', {'class': 'ratingDate'})]
 	partials = [x.text for x in soup('p', {'class': 'partial_entry'}) if x.parent['class'][0] == 'entry']
 
-	print len(partials)
 	for x in xrange(0, len(partials)):
 		data = {'review': partials[x], 'rating': ratings[x], 'ratingDates': ratingDates[x]}
 		persistent['results'][name]['reviews'].append(data)
 
 
 def hotelHandler(persistent, response):
-	print 'hotel handler %d' %(response.code)
-	print response.effective_url
 	persistent['i'] -= 1
 	if response.code != 200:
 		return
@@ -44,14 +39,10 @@ def hotelHandler(persistent, response):
 
 	soup = BeautifulSoup(response.body)
 	urls = [x['href'][:-8] for x in soup('a', {'class': 'review-count'})]
-	for x in urls:
-		print x
 
 	persistent['urls'] = persistent['urls'] + urls
 
 def reviewHandler(persistent, hotel_url, keyword, response):
-	print 'Review handler %d' %response.code
-	print response.effective_url
 	persistent['i'] -= 1
 	if response.code != 200:
 		return
@@ -77,7 +68,6 @@ def reviewHandler(persistent, hotel_url, keyword, response):
 	persistent['results'][name]['reviews'] = []
 	persistent['results'][name]['url'] = hotel_url
 
-	print len(partials)
 	for x in xrange(0, len(partials)):
 		data = {'review': partials[x], 'rating': ratings[x], 'ratingDates': ratingDates[x]}
 		persistent['results'][name]['reviews'].append(data)
@@ -122,7 +112,6 @@ def getReviews(keyword, place, entityType):
 	# 	persistent['i'] += 1
 	# 	binding = functools.partial(hotelHandler, persistent)
 	# 	url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
-	# 	print url
 	# 	http_client.fetch(url, binding)
 
 	# ioloop.IOLoop.instance().start()
@@ -144,6 +133,7 @@ def getReviews(keyword, place, entityType):
 
 	ioloop.IOLoop.instance().start()
 
+	print 'digging into even more reviews'
 	http_client = httpclient.AsyncHTTPClient()
 	persistent['i'] = 0
 	for urls in persistent['moreReviews']:
@@ -153,8 +143,6 @@ def getReviews(keyword, place, entityType):
 
 	ioloop.IOLoop.instance().start()
 
-	from pprint import pprint
-	pprint(persistent)
 	reviews_db.insert_one({'keyword': keyword, 'place': place, 'results': persistent['results']})
 
 
@@ -166,6 +154,8 @@ def main(keyword, place, entityType = 'HOTEL'):
 		return reviews_db.find_one({'keyword': keyword, 'place': place})
 	else:
 		getReviews(keyword, place, entityType)
-		return reviews_db.find({'keyword': keyword.lower(), 'place': place.lower()})
+		return reviews_db.find_one({'keyword': keyword.lower(), 'place': place.lower()})
 
+print 'show started at %s' %(datetime.now())
 main('swimming pool', 'chicago')
+print 'show ended at %s' %(datetime.now())
