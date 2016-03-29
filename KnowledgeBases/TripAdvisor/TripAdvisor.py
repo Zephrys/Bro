@@ -10,6 +10,27 @@ db = client.Bro
 reviews_db = db.tripadvisor
 place_db = db.tripadvisor
 
+def moreReviewHandler(persistent, name, response):
+	print 'more review handler %d' %response.code
+	print response.effective_url
+
+	persistent['i'] -= 1
+	if response.code != 200:
+		return
+
+	if persistent['i'] == 0:
+		ioloop.IOLoop.instance().stop()
+
+	soup = BeautifulSoup(response.body)
+
+	ratings = [x['alt'] for x in soup('img', {'class': 'sprite-rating_s_fill'})]
+	ratingDates = [x.text for x in soup('span', {'class': 'ratingDate'})]
+	partials = [x.text for x in soup('p', {'class': 'partial_entry'}) if x.parent['class'][0] == 'entry']
+
+	print len(partials)
+	for x in xrange(0, len(partials)):
+		data = {'review': partials[x], 'rating': ratings[x], 'ratingDates': ratingDates[x]}
+		persistent['results'][name]['reviews'].append(data)
 
 
 def hotelHandler(persistent, response):
@@ -47,27 +68,20 @@ def reviewHandler(persistent, hotel_url, keyword, response):
 	partials = [x.text for x in soup('p', {'class': 'partial_entry'}) if x.parent['class'][0] == 'entry']
 	urls = [x['href'] for x in soup('a', {'class': 'pageNum taLnk'})]
 
-	try:
-		for url in urls:
-			url = 'https://www.tripadvisor.com' + url
-			data = {'askForConfirmation': 'false', 'mode': 'filterReviews', 'q': keyword, 'returnTo': url}
-			response = http_client_2.fetch(url, body=urlencode(data), method="POST")
-			soup = BeautifulSoup(response.body)
-			ratings = ratings +  [x['alt'] for x in soup('img', {'class': 'sprite-rating_s_fill'})]
-			ratingDates = ratingDates + [x.text for x in soup('span', {'class': 'ratingDate'})]
-			partials = partials + [x.text for x in soup('p', {'class': 'partial_entry'}) if x.parent['class'][0] == 'entry']
-
-	except:
-		import traceback; traceback.print_exc();
+	for url in urls:
+		url = 'https://www.tripadvisor.com' + url
+		data = {'askForConfirmation': 'false', 'mode': 'filterReviews', 'q': keyword, 'returnTo': url}
+		persistent['moreReviews'].append({'url': url, 'data': data, 'name': name})
 
 	persistent['results'][name] = {}
 	persistent['results'][name]['reviews'] = []
+	persistent['results'][name]['url'] = hotel_url
+
 	print len(partials)
 	for x in xrange(0, len(partials)):
 		data = {'review': partials[x], 'rating': ratings[x], 'ratingDates': ratingDates[x]}
 		persistent['results'][name]['reviews'].append(data)
 
-	persistent['results'][name]['url'] = hotel_url
 
 def getReviews(keyword, place, entityType):
 	if place_db.count({'place': place}) == 0:
@@ -98,7 +112,7 @@ def getReviews(keyword, place, entityType):
 	print 'Number of results %d' %(maxOffset)
 
 	urls = [x['href'][:-8] for x in soup('a', {'class': 'review-count'})]
-	#fetch all these pages assynchronously
+
 	http_client = httpclient.AsyncHTTPClient()
 	persistent = {}
 	persistent['i'] = 0
@@ -118,6 +132,7 @@ def getReviews(keyword, place, entityType):
 
 	persistent['i'] = 0
 	persistent['results'] = {}
+	persistent['moreReviews'] = []
 
 	print 'digging into reviews'
 	for url in persistent['urls']:
@@ -126,6 +141,15 @@ def getReviews(keyword, place, entityType):
 		binding = functools.partial(reviewHandler, persistent, url, keyword)
 		data = {'askForConfirmation': 'false', 'mode': 'filterReviews', 'q': keyword, 'returnTo': url}
 		http_client.fetch(url, binding, method= "POST", body = urlencode(data))
+
+	ioloop.IOLoop.instance().start()
+
+	http_client = httpclient.AsyncHTTPClient()
+	persistent['i'] = 0
+	for urls in persistent['moreReviews']:
+		persistent['i'] +=1
+		binding = functools.partial(moreReviewHandler, persistent, urls['name'])
+		http_client.fetch(urls['url'], binding, method = "POST", body = urlencode(urls['data']))
 
 	ioloop.IOLoop.instance().start()
 
