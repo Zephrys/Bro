@@ -8,8 +8,8 @@ from datetime import datetime
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client.Bro
-reviews_db = db.tripadvisor
-place_db = db.tripadvisor
+reviews_db = db.tripadvisor_reviews
+place_db = db.tripadvisor_places
 
 def moreReviewHandler(persistent, name, response):
 	persistent['i'] -= 1
