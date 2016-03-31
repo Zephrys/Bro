@@ -79,7 +79,7 @@ def reviewHandler(persistent, hotel_url, keyword, rating, response):
 
 def getReviews(keyword, place, entityType):
 	if place_db.count({'place': place}) == 0:
-		url = 'https://www.tripadvisor.in/TypeAheadJson?query=%s&action=API&uiOrigin=GEOSCOPE&source=GEOSCOPE&interleaved=true&types=geo,theme_park&neighborhood_geos=true&link_type=geo,hotel,vr,attr,eat,flights_to,nbrhd,tg&details=true&max=1&injectNeighborhoods=true'%(quote(place, safe=''))
+		url = 'https://www.tripadvisor.in/TypeAheadJson?query=%s&action=API&uiOrigin=GEOSCOPE&source=GEOSCOPE&interleaved=true&types=geo,theme_park&neighborhood_geos=true&link_type=geo,hotel,vr,attr,eat,flights_to,nbrhd,tg&details=true&max=12&injectNeighborhoods=true'%(quote(place, safe=''))
 		try:
 			response = requests.get(url)
 			if response.status_code == 200:
@@ -87,6 +87,8 @@ def getReviews(keyword, place, entityType):
 				data = data['results'][0]
 				place_db.insert({'advisor': data, 'place': place})
 			else:
+				print url
+				print response.status_code
 				return 'Fail'
 		except:
 			import traceback; traceback.print_exc();
@@ -150,7 +152,7 @@ def getReviews(keyword, place, entityType):
 
 	ioloop.IOLoop.instance().start()
 
-	reviews_db.insert_one({'keyword': keyword, 'place': place, 'results': persistent['results']})
+	reviews_db.insert({'keyword': keyword, 'place': place, 'results': persistent['results']}, check_keys=False)
 
 
 def main(keyword, place, entityType = 'HOTEL'):
@@ -164,5 +166,5 @@ def main(keyword, place, entityType = 'HOTEL'):
 		return reviews_db.find_one({'keyword': keyword.lower(), 'place': place.lower()})
 
 print 'show started at %s' %(datetime.now())
-main('furniture', 'chicago')
+main('furniture', 'berlin')
 print 'show ended at %s' %(datetime.now())
