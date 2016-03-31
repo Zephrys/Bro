@@ -18,7 +18,7 @@ from nltk.corpus import sentiwordnet as swn
 from pymongo import MongoClient
 client = MongoClient('mongodb://localhost:27017/')
 db = client.Bro
-reviews_db = db.tripadvisor
+reviews_db = db.tripadvisor_reviews
 place_db = db.tripadvisor_places
 
 def strip_proppers_POS(text, search):
@@ -66,12 +66,11 @@ def strip_proppers_POS(text, search):
 	return res
 
 def get_reviews(search, location):
-	arr = reviews_db.find_one({'keyword':search,'place':location})
+	arr = reviews_db.find_one({'keyword':search.lower(),'place':location.lower()})
 	places = [arr['results'][i] for i in arr['results']]
 	return places
 
 def accumulate(search_query, location):
-
 	places = get_reviews(search_query,location)
 	print len(places)
 	res = []

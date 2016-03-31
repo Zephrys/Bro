@@ -87,7 +87,7 @@ def getReviews(keyword, place, entityType):
 				data = data['results'][0]
 				place_db.insert({'advisor': data, 'place': place})
 			else:
-				return 'Fail'
+				print url
 		except:
 			import traceback; traceback.print_exc();
 
@@ -150,20 +150,22 @@ def getReviews(keyword, place, entityType):
 
 	ioloop.IOLoop.instance().start()
 
-	reviews_db.insert_one({'keyword': keyword, 'place': place, 'results': persistent['results']})
+	reviews_db.insert({'keyword': keyword, 'place': place, 'results': persistent['results']}, check_keys = false)
 
 
 def main(keyword, place, entityType = 'HOTEL'):
+	print keyword
+	print place
+	print entityType
 	keyword = keyword.lower()
 	place = place.lower()
 
 	if reviews_db.count({'keyword': keyword, 'place': place}) > 0:
+		print 'here'
 		return True
-	else:
+	else:	
+		print 'there'
 		getReviews(keyword, place, entityType)
 		return True
 
 	return False
-print 'show started at %s' %(datetime.now())
-main('furniture', 'chicago')
-print 'show ended at %s' %(datetime.now())
