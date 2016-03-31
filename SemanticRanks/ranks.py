@@ -18,7 +18,7 @@ from nltk.corpus import sentiwordnet as swn
 from pymongo import MongoClient
 client = MongoClient('mongodb://localhost:27017/')
 db = client.Bro
-reviews_db = db.tripadvisor
+reviews_db = db.tripadvisor_reviews
 place_db = db.tripadvisor_places
 
 def strip_proppers_POS(text, search):
@@ -28,7 +28,8 @@ def strip_proppers_POS(text, search):
 	res = []
 	search_index = [i for i,val in enumerate(tokens) if ((p.singular_noun(val) and p.singular_noun(val)==search) or (not p.singular_noun(val) and val	==search))]
 	words = [(word,pos) for word,pos in tagged if (pos[0]=="J") and len(word)>2 and word not in stop and not p.singular_noun(word) and eng_check.check(word) and not any(ccc.isdigit() for ccc in word)]
-
+	
+	adj_count = 0
 	for a in range(0,len(tagged)):
 		if tagged[a] in words:		
 			flag = 0
@@ -58,9 +59,10 @@ def strip_proppers_POS(text, search):
 					score = adj_synset[0].pos_score() - adj_synset[0].neg_score()
 				try:
 					res.append((adj,score/(pow(dist,2))))
+					adj_count += 1
 				except:
 					pass
-	return res
+	return (res,adj_count)
 
 def get_reviews(search, location):
 	arr = reviews_db.find_one({'keyword':search,'place':location})
@@ -75,13 +77,20 @@ def accumulate(search_query, location):
 
 	for place in places:	
 		reviews = place['reviews']
+		place_rating = place['rating']
+
+		if place_rating[1] == ' ':
+			place_rating = float(place_rating[0:1])/5
+		else:			
+			place_rating = float(place_rating[0:3])/5
+		print place_rating
 
 		score_place = 0
 			
 		for r in reviews:
 			review_text = r['review'].encode('utf-8', 'ignore')
-			review_rating = r['rating']
 
+						
 			score_review = 0
 
 			for search in nltk.word_tokenize(search_query.lower()):
@@ -89,16 +98,19 @@ def accumulate(search_query, location):
 				if p.singular_noun(search):
 					search = p.singular_noun(search)
 				try:
-					review_adjectives = strip_proppers_POS(review_text, search)	
+					review_adjectives = strip_proppers_POS(review_text, search)[0]
+					adj_count = strip_proppers_POS(review_text, search)[1]	
+	
+					for i in review_adjectives:
+						score_review += i[1]
+
+					score_review = score_review/adj_count	
 				except:
 					continue
-	
-				for i in review_adjectives:
-					score_review += i[1]
 
 			score_place += score_review
 		
-		res.append({'place_url':place['url'],'score':  score_place/len(reviews)})
+		res.append({'place_url':place['url'],'score':  score_place*place_rating/len(reviews)})
 		
 	return res
 		
@@ -107,7 +119,7 @@ if __name__ == '__main__':
 	
 	search_query = "swimming pool"
 	location = "chicago"
-	desired_sentiment = 0
+	desired_sentiment = 1
 
 	result_places = accumulate(search_query, location)
 	
