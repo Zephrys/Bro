@@ -39,10 +39,12 @@ def hotelHandler(persistent, response):
 
 	soup = BeautifulSoup(response.body)
 	urls = [x['href'][:-8] for x in soup('a', {'class': 'review-count'})]
+	ratings = [x['alt'] for x in soup('img', {'class': 'sprite-ratings'})]
 
 	persistent['urls'] = persistent['urls'] + urls
+	persistent['url_ratings'] = persistent['url_ratings'] + urls
 
-def reviewHandler(persistent, hotel_url, keyword, response):
+def reviewHandler(persistent, hotel_url, keyword, rating, response):
 	persistent['i'] -= 1
 	if response.code != 200:
 		return
@@ -65,6 +67,8 @@ def reviewHandler(persistent, hotel_url, keyword, response):
 		persistent['moreReviews'].append({'url': url, 'data': data, 'name': name})
 
 	persistent['results'][name] = {}
+	persistent['results'][name]['rating'] = rating
+
 	persistent['results'][name]['reviews'] = []
 	persistent['results'][name]['url'] = hotel_url
 
@@ -102,11 +106,13 @@ def getReviews(keyword, place, entityType):
 	print 'Number of results %d' %(maxOffset)
 
 	urls = [x['href'][:-8] for x in soup('a', {'class': 'review-count'})]
+	ratings = [x['alt'] for x in soup('img', {'class': 'sprite-ratings'})]
 
 	http_client = httpclient.AsyncHTTPClient()
 	persistent = {}
 	persistent['i'] = 0
 	persistent['urls'] = urls
+	persistent['url_ratings'] = ratings
 
 	# for offset in xrange(30, maxOffset+1, 30):
 	# 	persistent['i'] += 1
@@ -125,9 +131,10 @@ def getReviews(keyword, place, entityType):
 
 	print 'digging into reviews'
 	for url in persistent['urls']:
+		rating = persistent['url_ratings'][persistent['urls'].index(url)]
 		url = 'https://www.tripadvisor.com' + url
 		persistent['i'] += 1
-		binding = functools.partial(reviewHandler, persistent, url, keyword)
+		binding = functools.partial(reviewHandler, persistent, url, keyword, rating)
 		data = {'askForConfirmation': 'false', 'mode': 'filterReviews', 'q': keyword, 'returnTo': url}
 		http_client.fetch(url, binding, method= "POST", body = urlencode(data))
 
@@ -157,5 +164,5 @@ def main(keyword, place, entityType = 'HOTEL'):
 		return reviews_db.find_one({'keyword': keyword.lower(), 'place': place.lower()})
 
 print 'show started at %s' %(datetime.now())
-main('swimming pool', 'chicago')
+main('furniture', 'chicago')
 print 'show ended at %s' %(datetime.now())
