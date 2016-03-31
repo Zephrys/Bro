@@ -30,9 +30,9 @@ def strip_proppers_POS(text, search):
 	words = [(word,pos) for word,pos in tagged if (pos[0]=="J") and len(word)>2 and word not in stop and not p.singular_noun(word) and eng_check.check(word) and not any(ccc.isdigit() for ccc in word)]
 
 	for a in range(0,len(tagged)):
-		if tagged[a] in words:		
+		if tagged[a] in words:
 			flag = 0
-			if tagged[a][1][0] == "J":			
+			if tagged[a][1][0] == "J":
 				adj = tagged[a][0]
 				dist = min([abs(a-s) for s in search_index])
 				score = 0
@@ -76,12 +76,12 @@ def accumulate(search_query, location):
 	print len(places)
 	res = []
 
-	for place in places:	
+	for place in places:
 		reviews = place['reviews']
 
 		positive_score_place = 0
 		negative_score_place = 0
-			
+
 		for r in reviews:
 			review_text = r['review'].encode('utf-8', 'ignore')
 			review_rating = r['rating']
@@ -94,33 +94,28 @@ def accumulate(search_query, location):
 				if p.singular_noun(search):
 					search = p.singular_noun(search)
 				try:
-					review_adjectives = strip_proppers_POS(review_text, search)	
+					review_adjectives = strip_proppers_POS(review_text, search)
 				except:
 					continue
-	
+
 				for i in review_adjectives:
 					positive_score_review += i[1]
 					negative_score_review += i[2]
 
 			positive_score_place += positive_score_review
 			negative_score_place += negative_score_review
-		
-		res.append({'place_url':place['url'],'positive_score':  positive_score_place/len(reviews), 'negative_score': negative_score_place/len(reviews)})
-		
-	return res
-		
 
-if __name__ == '__main__':
-	
-	search_query = "swimming pool"
-	location = "chicago"
-	desired_sentiment = 1
+		res.append({'place_url':place['url'],'positive_score':  positive_score_place/len(reviews), 'negative_score': negative_score_place/len(reviews)})
+
+	return res
+
+
+def integrated(search_query, location, desired_sentiment=1):
 
 	result_places = accumulate(search_query, location)
-	
 	if desired_sentiment == 1:
 		sorted_places = sorted(result_places, key = lambda x:x['positive_score'], reverse = True)
 	else:
 		sorted_places = sorted(result_places, key = lambda x:x['negative_score'], reverse = True)
 
-	print sorted_places[0]['place_url']
+	return sorted_places[0]['place_url']

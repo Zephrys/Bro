@@ -158,11 +158,12 @@ def main(keyword, place, entityType = 'HOTEL'):
 	place = place.lower()
 
 	if reviews_db.count({'keyword': keyword, 'place': place}) > 0:
-		return reviews_db.find_one({'keyword': keyword, 'place': place})
+		return True
 	else:
 		getReviews(keyword, place, entityType)
-		return reviews_db.find_one({'keyword': keyword.lower(), 'place': place.lower()})
+		return True
 
+	return False
 print 'show started at %s' %(datetime.now())
 main('furniture', 'chicago')
 print 'show ended at %s' %(datetime.now())
