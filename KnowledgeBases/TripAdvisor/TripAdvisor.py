@@ -164,7 +164,3 @@ def main(keyword, place, entityType = 'HOTEL'):
 	else:
 		getReviews(keyword, place, entityType)
 		return reviews_db.find_one({'keyword': keyword.lower(), 'place': place.lower()})
-
-print 'show started at %s' %(datetime.now())
-main('furniture', 'berlin')
-print 'show ended at %s' %(datetime.now())
