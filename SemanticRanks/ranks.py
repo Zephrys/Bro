@@ -36,7 +36,6 @@ def strip_proppers_POS(text, search):
 				adj = tagged[a][0]
 				dist = min([abs(a-s) for s in search_index])
 				score = 0
-				neg_score = 0
 				adj_synset = swn.senti_synsets(adj,'a')
 				if len(adj_synset) <= 0:
 					adj_synset = swn.senti_synsets(adj,'v')
@@ -52,15 +51,13 @@ def strip_proppers_POS(text, search):
 								w1 = synonyms[s]
 								adj_synset1 = swn.senti_synsets(w1,'a')
 								if len(adj_synset1)>0:
-									score += adj_synset1[0].pos_score()
-									neg_score += adj_synset1[0].pos_score()
+									score += adj_synset1[0].pos_score() - adj_synset1[0].neg_score()
 									synonym_count += 1
 						score=score/2
 				else:
-					score = adj_synset[0].pos_score()
-					neg_score = adj_synset[0].neg_score()
+					score = adj_synset[0].pos_score() - adj_synset[0].neg_score()
 				try:
-					res.append((adj,score/(pow(dist,2)),neg_score/(pow(dist,2))))
+					res.append((adj,score/(pow(dist,2))))
 				except:
 					pass
 	return res
@@ -79,15 +76,13 @@ def accumulate(search_query, location):
 	for place in places:	
 		reviews = place['reviews']
 
-		positive_score_place = 0
-		negative_score_place = 0
+		score_place = 0
 			
 		for r in reviews:
 			review_text = r['review'].encode('utf-8', 'ignore')
 			review_rating = r['rating']
 
-			positive_score_review = 0
-			negative_score_review = 0
+			score_review = 0
 
 			for search in nltk.word_tokenize(search_query.lower()):
 
@@ -99,13 +94,11 @@ def accumulate(search_query, location):
 					continue
 	
 				for i in review_adjectives:
-					positive_score_review += i[1]
-					negative_score_review += i[2]
+					score_review += i[1]
 
-			positive_score_place += positive_score_review
-			negative_score_place += negative_score_review
+			score_place += score_review
 		
-		res.append({'place_url':place['url'],'positive_score':  positive_score_place/len(reviews), 'negative_score': negative_score_place/len(reviews)})
+		res.append({'place_url':place['url'],'score':  score_place/len(reviews)})
 		
 	return res
 		
@@ -114,13 +107,13 @@ if __name__ == '__main__':
 	
 	search_query = "swimming pool"
 	location = "chicago"
-	desired_sentiment = 1
+	desired_sentiment = 0
 
 	result_places = accumulate(search_query, location)
 	
-	if desired_sentiment == 1:
-		sorted_places = sorted(result_places, key = lambda x:x['positive_score'], reverse = True)
-	else:
-		sorted_places = sorted(result_places, key = lambda x:x['negative_score'], reverse = True)
+	sorted_places = sorted(result_places, key = lambda x:x['score'], reverse = True)
 
-	print sorted_places[0]['place_url']
+	if desired_sentiment == 1:
+		print sorted_places[0]['place_url']
+	else:	
+		print sorted_places[-1]['place_url']
