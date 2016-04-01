@@ -42,8 +42,8 @@ def hotelHandler(persistent, response):
 
     soup = BeautifulSoup(response.body, "lxml")
     urls = [x['href'][:-8] for x in soup('a', {'class': 'review-count'})]
-    ratings = [x['alt']
-               for x in soup('img', {'class': 'sprite-ratings'})]
+    # ratings = [x['alt']
+    #            for x in soup('img', {'class': 'sprite-ratings'})]
 
     persistent['urls'] = persistent['urls'] + urls
     persistent['url_ratings'] = persistent['url_ratings'] + urls
@@ -89,7 +89,12 @@ def reviewHandler(persistent, hotel_url, keyword, rating, response):
 
 def getReviews(keyword, place, entityType):
     if place_db.count({'place': place}) == 0:
-        url = 'https://www.tripadvisor.in/TypeAheadJson?query=%s&action=API&uiOrigin=GEOSCOPE&source=GEOSCOPE&interleaved=true&types=geo,theme_park&neighborhood_geos=true&link_type=geo,hotel,vr,attr,eat,flights_to,nbrhd,tg&details=true&max=12&injectNeighborhoods=true'%(quote(place, safe=''))
+        url = "https://www.tripadvisor.in/TypeAheadJson?query=%s" +\
+              "&action=API&uiOrigin=GEOSCOPE&source=GEOSCOPE&interleaved" + \
+              "=true&types=geo,theme_park&neighborhood_geos=true" +\
+              "&link_type=geo,hotel,vr,attr,eat,flights_to,nbrhd,tg" +\
+              "&details=true&max=12&injectNeighborhoods=true"\
+              % (quote(place, safe=''))
         try:
             response = requests.get(url)
             if response.status_code == 200:
@@ -112,7 +117,9 @@ def getReviews(keyword, place, entityType):
                  'ALL': 'a', 'ATTRACTIONS': 'A',
                  'HOLIDAY_HOME': ''}
 
-    url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=0&ajax=search" %(keyword, tripadvisor_code, entityMap[entityType])
+    url = "https://www.tripadvisor.in/Search?q=%s" +\
+          "&geo=%s&actionType=updatePage&ssrc=%s&o=0" +\
+          "&ajax=search" % (keyword, tripadvisor_code, entityMap[entityType])
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "lxml")
     maxOffset = 0
@@ -132,7 +139,9 @@ def getReviews(keyword, place, entityType):
     # for offset in xrange(30, maxOffset+1, 30):
     #   persistent['i'] += 1
     #   binding = functools.partial(hotelHandler, persistent)
-    #   url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
+    #   url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType" +\
+    #         "=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword" +\
+    #         ", safe=''), tripadvisor_code, entityMap[entityType], offset)
     #   http_client.fetch(url, binding)
 
     # ioloop.IOLoop.instance().start()

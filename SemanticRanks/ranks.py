@@ -65,7 +65,7 @@ def strip_proppers_POS(text, search):
                                 w1 = synonyms[s]
                                 adj_synset1 = swn.senti_synsets(w1, 'a')
                                 if len(adj_synset1) > 0:
-                                    score += adj_synset1[0].pos_score() \
+                                    score += adj_synset1[0].pos_score()\
                                         - adj_synset1[0].neg_score()
                                     synonym_count += 1
                         score = score/2
@@ -135,7 +135,8 @@ def accumulate(search_query, location):
 
 def integrated(search_query, location, desired_sentiment=1):
     result_places = accumulate(search_query, location)
-    sorted_places = sorted(result_places, key = lambda x:x['score'], reverse = True)
+    sorted_places = sorted(result_places,
+                           key=lambda x: x['score'], reverse=True)
     res = {}
     res['search'] = search_query
     res['location'] = location
