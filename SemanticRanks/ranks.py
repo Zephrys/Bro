@@ -20,6 +20,7 @@ client = MongoClient('mongodb://localhost:27017/')
 db = client.Bro
 reviews_db = db.tripadvisor_reviews
 place_db = db.tripadvisor_places
+result_db = db.tripadvisor_results
 
 def strip_proppers_POS(text, search):
 	text = text.decode('utf-8', 'ignore')
@@ -114,18 +115,20 @@ def accumulate(search_query, location):
 		
 	return res
 		
-
-if __name__ == '__main__':
-	
-	search_query = "swimming pool"
-	location = "chicago"
-	desired_sentiment = 1
+def integrated(search_query, location, desired_sentiment=1):
 
 	result_places = accumulate(search_query, location)
-	
 	sorted_places = sorted(result_places, key = lambda x:x['score'], reverse = True)
-
+	res = {}
+	res['search'] = search_query
+	res['location'] = location
+	res['desired_sentiment'] = desired_sentiment
+	
 	if desired_sentiment == 1:
-		print sorted_places[0]['place_url']
-	else:	
-		print sorted_places[-1]['place_url']
+		res_url = sorted_places[0]['place_url']
+	elif desired_sentiment == 0:
+		res_url = sorted_places[-1]['place_url']
+
+	res['url'] = res_url
+	result_db.insert_one(res)
+	return res_url
