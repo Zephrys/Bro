@@ -1,14 +1,11 @@
 import wit
-import json
 import config
 
 
 def call_wit(query):
 
     res = {}
-    response = json.loads(wit.message(config.access_token,
-                          query))
-
+    response = wit.message(config.access_token, query)
     outcome = response['outcomes'][0]
 
     intent = outcome['intent']
@@ -27,3 +24,6 @@ def call_wit(query):
             res['search'] = search['value']
 
     return res
+
+if __name__ == '__main__':
+    call_wit("Delhi good hotels with amazing pools")

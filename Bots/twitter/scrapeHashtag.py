@@ -15,7 +15,7 @@ t = Twython(app_key=consumer_key, app_secret=consumer_secret,
 class HashStreamer(TwythonStreamer):
     def on_success(self, data):
         if 'text' in data:
-            print data['text'].encode('utf-8')
+            # print data['text'].encode('utf-8')
             tokens = data['text'].split()
             print ' '.join([x for x in tokens if '#' not in x])
             response = get_intent.call_wit(' '.join([x for x in tokens
