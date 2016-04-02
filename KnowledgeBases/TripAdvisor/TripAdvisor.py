@@ -89,12 +89,7 @@ def reviewHandler(persistent, hotel_url, keyword, rating, response):
 
 def getReviews(keyword, place, entityType):
     if place_db.count({'place': place}) == 0:
-        url = "https://www.tripadvisor.in/TypeAheadJson?query=%s" +\
-              "&action=API&uiOrigin=GEOSCOPE&source=GEOSCOPE&interleaved" + \
-              "=true&types=geo,theme_park&neighborhood_geos=true" +\
-              "&link_type=geo,hotel,vr,attr,eat,flights_to,nbrhd,tg" +\
-              "&details=true&max=12&injectNeighborhoods=true"\
-              % (quote(place, safe=''))
+	url = '''https://www.tripadvisor.in/TypeAheadJson?query=%s&action=API&uiOrigin=GEOSCOPE&source=GEOSCOPE&interleaved=true&types=geo,theme_park&neighborhood_geos=true&link_type=geo,hotel,vr,attr,eat,flights_to,nbrhd,tg&details=true&max=12&injectNeighborhoods=true''' %(quote(place,safe=""))
         try:
             response = requests.get(url)
             if response.status_code == 200:
@@ -116,10 +111,14 @@ def getReviews(keyword, place, entityType):
     entityMap = {'HOTEL': 'h', 'RESTAURANT': 'e',
                  'ALL': 'a', 'ATTRACTIONS': 'A',
                  'HOLIDAY_HOME': ''}
-
+    print keyword
     url = "https://www.tripadvisor.in/Search?q=%s" +\
           "&geo=%s&actionType=updatePage&ssrc=%s&o=0" +\
-          "&ajax=search" % (keyword, tripadvisor_code, entityMap[entityType])
+          "&ajax=search"
+    print url
+    from time import sleep
+    sleep(1) 
+    url = url % (quote(keyword,safe=""), tripadvisor_code, entityMap[entityType])
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "lxml")
     maxOffset = 0
@@ -177,7 +176,8 @@ def getReviews(keyword, place, entityType):
                           body=urlencode(urls['data']))
 
     ioloop.IOLoop.instance().start()
-
+    print persistent['results']
+    print reviews_db
     reviews_db.insert({'keyword': keyword, 'place': place,
                        'results': persistent['results']}, check_keys=False)
 

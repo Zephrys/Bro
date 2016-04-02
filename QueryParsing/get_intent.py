@@ -28,4 +28,4 @@ def call_wit(query):
 
     return res
 
-print call_wit("Hotels with the best view of the Grand Canyon in USA")
+
