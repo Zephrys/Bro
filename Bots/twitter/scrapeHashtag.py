@@ -31,8 +31,8 @@ class HashStreamer(TwythonStreamer):
                 output = ranks.integrated(response['search'],
                                           response['location'])
 
-            status = "Find the Best " + response['search'] + "in "
-            status += response['location'] + "here:"
+            status = "Find the Best " + response['search'] + " in "
+            status += response['location'] + " here! "
 
             status = "@" + data['user']['screen_name'] + status + output
             t.update_status(status=status)
