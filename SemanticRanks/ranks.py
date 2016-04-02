@@ -81,7 +81,8 @@ def strip_proppers_POS(text, search):
 
 
 def get_reviews(search, location):
-    arr = reviews_db.find_one({'keyword': search.lower(), 'place': location.lower()})
+    arr = reviews_db.find_one({'keyword': search.lower(),
+                               'place': location.lower()})
     places = [arr['results'][i] for i in arr['results']]
     return places
 

@@ -1,5 +1,4 @@
-#This contains in-house code. Replaced by Wit API.
-
+# This contains in-house code. Replaced by Wit API.
 import nltk
 
 

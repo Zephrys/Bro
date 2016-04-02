@@ -5,9 +5,9 @@ import config
 
 def call_wit(query):
 
-    wit.init()
     res = {}
-    response = json.loads(wit.text_query(query, config.access_token))
+    response = json.loads(wit.message(config.access_token,
+                          query))
 
     outcome = response['outcomes'][0]
 
@@ -27,5 +27,3 @@ def call_wit(query):
             res['search'] = search['value']
 
     return res
-
-
