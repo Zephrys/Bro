@@ -81,7 +81,8 @@ def strip_proppers_POS(text, search):
 
 
 def get_reviews(search, location):
-    arr = reviews_db.find_one({'keyword': search, 'place': location})
+    arr = reviews_db.find_one({'keyword': search.lower(),
+                               'place': location.lower()})
     places = [arr['results'][i] for i in arr['results']]
     return places
 
@@ -100,7 +101,6 @@ def accumulate(search_query, location):
             place_rating = float(place_rating[0:1])/5
         else:
             place_rating = float(place_rating[0:3])/5
-        print place_rating
 
         score_place = 0
 
