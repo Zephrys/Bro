@@ -102,6 +102,14 @@ def getReviews(keyword, place, entityType):
 	url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=0&ajax=search" %(keyword, tripadvisor_code, entityMap[entityType])
 	response = requests.get(url)
 	soup = BeautifulSoup(response.text)
+
+	#check if there are some results specific to the city
+	#Idea in the world queries scope 1.
+	scope = int(soup('input', {'id': 'scope'})[0]['value'])
+	if scope == 1:
+		reviews_db.insert({'keyword': keyword, 'place': place, 'results': {}, 'entity': entityType}, check_keys=False)
+		return
+
 	maxOffset = 0
 	if len(soup('a', {'class': 'pageNumber'})) > 0:
 		maxOffset = (int(soup('a', {'class': 'pageNumber'})[-1].text) - 1 ) * 30
@@ -121,8 +129,9 @@ def getReviews(keyword, place, entityType):
 	# 	binding = functools.partial(hotelHandler, persistent)
 	# 	url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
 	# 	http_client.fetch(url, binding)
+	# if persistent['i'] !=0:
+	# 	ioloop.IOLoop.instance().start()
 
-	# ioloop.IOLoop.instance().start()
 	print 'Hotels Fetched'
 
 	http_client = httpclient.AsyncHTTPClient()
@@ -140,7 +149,8 @@ def getReviews(keyword, place, entityType):
 		data = {'askForConfirmation': 'false', 'mode': 'filterReviews', 'q': keyword, 'returnTo': url}
 		http_client.fetch(url, binding, method= "POST", body = urlencode(data))
 
-	ioloop.IOLoop.instance().start()
+	if persistent['i'] != 0:
+		ioloop.IOLoop.instance().start()
 
 	print 'digging into even more reviews'
 	http_client = httpclient.AsyncHTTPClient()
@@ -150,17 +160,18 @@ def getReviews(keyword, place, entityType):
 		binding = functools.partial(moreReviewHandler, persistent, urls['name'])
 		http_client.fetch(urls['url'], binding, method = "POST", body = urlencode(urls['data']))
 
-	ioloop.IOLoop.instance().start()
+	if persistent['i'] != 0:
+		ioloop.IOLoop.instance().start()
 
-	reviews_db.insert({'keyword': keyword, 'place': place, 'results': persistent['results']}, check_keys=False)
+	reviews_db.insert({'keyword': keyword, 'place': place, 'results': persistent['results'], 'entity': entityType}, check_keys=False)
 
 
 def main(keyword, place, entityType = 'HOTEL'):
 	keyword = keyword.lower()
 	place = place.lower()
 
-	if reviews_db.count({'keyword': keyword, 'place': place}) > 0:
+	if reviews_db.count({'keyword': keyword, 'place': place, 'entity': entityType}) > 0:
 		return reviews_db.find_one({'keyword': keyword, 'place': place})
 	else:
 		getReviews(keyword, place, entityType)
-		return reviews_db.find_one({'keyword': keyword.lower(), 'place': place.lower()})
+		return reviews_db.find_one({'keyword': keyword.lower(), 'place': place.lower(), 'entity': entityType})
