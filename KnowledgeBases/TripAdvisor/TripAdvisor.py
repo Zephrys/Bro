@@ -97,7 +97,7 @@ def getReviews(keyword, place, entityType):
 	tripadvisor_code = data['value']
 	print tripadvisor_code
 
-	entityMap = {'HOTEL': 'h', 'RESTAURANT': 'e', 'ALL': 'a', 'ATTRACTIONS': 'A', 'HOLIDAY_HOME': ''}
+	entityMap = {'HOTEL': 'h', 'RESTAURANT': 'e', 'ALL': 'a', 'ATTRACTIONS': 'A'}
 
 	url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=0&ajax=search" %(keyword, tripadvisor_code, entityMap[entityType])
 	response = requests.get(url)
