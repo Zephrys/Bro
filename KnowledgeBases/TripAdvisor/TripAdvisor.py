@@ -89,7 +89,7 @@ def getReviews(keyword, place, entityType):
 			else:
 				print url
 				print response.status_code
-				return 'Fail'
+				return False
 		except:
 			import traceback; traceback.print_exc();
 
@@ -105,8 +105,9 @@ def getReviews(keyword, place, entityType):
 
 	#check if there are some results specific to the city
 	#Idea in the world queries scope 1.
+	#Trying to support in the world queries
 	scope = int(soup('input', {'id': 'scope'})[0]['value'])
-	if scope == 1:
+	if scope == 1 and 'place' not in ['globe', 'world']:
 		reviews_db.insert({'keyword': keyword, 'place': place, 'results': {}, 'entity': entityType}, check_keys=False)
 		return
 
@@ -124,13 +125,13 @@ def getReviews(keyword, place, entityType):
 	persistent['urls'] = urls
 	persistent['url_ratings'] = ratings
 
-	# for offset in xrange(30, maxOffset+1, 30):
-	# 	persistent['i'] += 1
-	# 	binding = functools.partial(hotelHandler, persistent)
-	# 	url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
-	# 	http_client.fetch(url, binding)
-	# if persistent['i'] !=0:
-	# 	ioloop.IOLoop.instance().start()
+	for offset in xrange(30, maxOffset+1, 30):
+		persistent['i'] += 1
+		binding = functools.partial(hotelHandler, persistent)
+		url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
+		http_client.fetch(url, binding)
+	if persistent['i'] !=0:
+		ioloop.IOLoop.instance().start()
 
 	print 'Hotels Fetched'
 
@@ -164,14 +165,16 @@ def getReviews(keyword, place, entityType):
 		ioloop.IOLoop.instance().start()
 
 	reviews_db.insert({'keyword': keyword, 'place': place, 'results': persistent['results'], 'entity': entityType}, check_keys=False)
-
+	return True
 
 def main(keyword, place, entityType = 'HOTEL'):
 	keyword = keyword.lower()
 	place = place.lower()
 
+	if place_db.count({'place': 'world'}) == 0:
+		place_db.insert({'place': 'world', 'advisor' : {'value': 1} })
+
 	if reviews_db.count({'keyword': keyword, 'place': place, 'entity': entityType}) > 0:
-		return reviews_db.find_one({'keyword': keyword, 'place': place})
+		return True
 	else:
-		getReviews(keyword, place, entityType)
-		return reviews_db.find_one({'keyword': keyword.lower(), 'place': place.lower(), 'entity': entityType})
+		return getReviews(keyword, place, entityType)
