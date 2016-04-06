@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath("."))
 from QueryParsing import get_intent
 from KnowledgeBases.TripAdvisor import TripAdvisor
 from SemanticRanks import ranks
-from datetime import datetime
+import datetime
 from pymongo import MongoClient
 
 client = MongoClient('mongodb://localhost:27017/')
@@ -41,30 +41,33 @@ class HashStreamer(TwythonStreamer):
             if boolean:
                 output = ranks.integrated(response['search'],
                                           response['location'])
+                status = "Find the Best " + response['search'] + " in "
+                status += response['location'] + " here! "
 
-            status = "Find the Best " + response['search'] + " in "
-            status += response['location'] + " here! "
+                found_match = False
+                if '#match' in data['text'] and response['intent'] == 'get_restaurants' and boolean:
+                    unmatched = unmatched_db.find({'keyword': response['search'], 'place': response['location']})
+                    for match in unmatched:
+                        if (datetime.datetime.now() - match['timestamp']).seconds/60.0 < 30 and match['nick'] != data['user']['screen_name']:
+                            found_match = match['nick']
+                            break
+                        unmatched_db.remove({'keyword': response['search'],
+                            'place': response['location'], 'nick': match['nick'],
+                            'timestamp': match['timestamp']})
 
-            found_match = False
-            if '#match' in data['text'] and response['intent'] == 'get_restaurants' and boolean:
-                unmatched = unmatched_db.find({'keyword': response['search'], 'place': response['location']})
-                for match in unmatched:
-                    if (datetime.datetime.now() - match['timestamp']).seconds/60.0 < 30 and match['nick'] != data['user']['screen_name']:
-                        found_match = match['nick']
-                        break
-                    unmatched_db.remove({'keyword': response['search'],
-                        'place': response['location'], 'nick': match['nick'],
-                        'timestamp': match['timestamp']})
+                status = "@" + data['user']['screen_name'] + " " +  status + output
 
-            status = "@" + data['user']['screen_name'] + " " +  status + output
+                if found_match:
+                    status+= " meet %s, they are also looking to grab a bite." %(found_match)
+                elif '#match' in data['text']:
+                    unmatched_db.insert({'keyword': response['search'], 'place': response['location'],
+                        'nick': data['user']['screen_name'], 'timestamp': datetime.datetime.now()})
+                    status += ' couldnt find a match. hold on!'
 
-            if found_match:
-                status+= " meet %s, they are also looking to grab a bite." %(found_match)
-            elif '#match' in data['text']:
-                unmatched_db.insert({'keyword': response['search'], 'place': response['location'],
-                    'nick': data['user']['screen_name'], 'timestamp': datetime.datetime.now()})
-                status += ' couldnt find a match. hold on!'
+            else:
+                status = "@ " + data['user']['screen_name']
 
+            print '[%s]: %s' %(datetime.datetime.now(), status)
             t.update_status(status=status)
 
     def on_error(self, status_code, data):
