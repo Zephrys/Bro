@@ -107,7 +107,7 @@ def getReviews(keyword, place, entityType):
 	#Idea in the world queries scope 1.
 	#Trying to support in the world queries
 	scope = int(soup('input', {'id': 'scope'})[0]['value'])
-	if scope == 1 and 'place' not in ['globe', 'world']:
+	if scope == 1 and place not in ['globe', 'world']:
 		reviews_db.insert({'keyword': keyword, 'place': place, 'results': {}, 'entity': entityType}, check_keys=False)
 		return
 
