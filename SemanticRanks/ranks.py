@@ -127,26 +127,36 @@ def accumulate(search_query, location):
 
             score_place += score_review
 
-        res.append({'place_url': place['url'],
+        res.append({'place_url': place['url'], 'image' : place['image'], 
                     'score':  score_place * place_rating/len(reviews)})
 
     return res
 
 
 def integrated(search_query, location, desired_sentiment=1):
-    result_places = accumulate(search_query, location)
-    sorted_places = sorted(result_places,
-                           key=lambda x: x['score'], reverse=True)
-    res = {}
-    res['search'] = search_query
-    res['location'] = location
-    res['desired_sentiment'] = desired_sentiment
 
-    if desired_sentiment == 1:
-        res_url = sorted_places[0]['place_url']
-    elif desired_sentiment == 0:
-        res_url = sorted_places[-1]['place_url']
+    existing_places = result_db.find({'search': search.lower(), 'location': location.lower()})
+    
+    if len(existing_places) > 0:
+        return existing_places['url'], existing_places['image']
+    else:
+        result_places = accumulate(search_query, location)
+        sorted_places = sorted(result_places,
+                               key=lambda x: x['score'], reverse=True)
+        res = {}
+        res['search'] = search_query
+        res['location'] = location
+        res['desired_sentiment'] = desired_sentiment
 
-    res['url'] = res_url
-    result_db.insert_one(res)
-    return res_url
+        if desired_sentiment == 1:
+            res_url = sorted_places[0]['place_url']
+            res_image = sorted_places[0]['image']
+        elif desired_sentiment == 0:
+            res_url = sorted_places[-1]['place_url']
+            res_image = sorted_places[-1]['image']
+
+
+        res['url'] = res_url
+        res['image'] = res_image
+        result_db.insert_one(res)
+        return res_url, res_image
