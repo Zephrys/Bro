@@ -9,6 +9,8 @@ from KnowledgeBases.TripAdvisor import TripAdvisor
 from SemanticRanks import ranks
 import datetime
 from pymongo import MongoClient
+import requests
+from io import BytesIO
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client.Bro
@@ -39,7 +41,7 @@ class HashStreamer(TwythonStreamer):
                 boolean = TripAdvisor.main(response['search'],
                                            response['location'], 'RESTAURANT')
             if boolean:
-                output = ranks.integrated(response['search'],
+                output, image = ranks.integrated(response['search'],
                                           response['location'])
                 status = "Find the Best " + response['search'] + " in "
                 status += response['location'] + " here! "
@@ -68,7 +70,10 @@ class HashStreamer(TwythonStreamer):
                 status = "@ " + data['user']['screen_name']
 
             print '[%s]: %s' %(datetime.datetime.now(), status)
-            t.update_status(status=status)
+            img = requests.get(image).content
+
+            t.post('statuses/update_with_media', params={'status': status},
+                files= {'media': (image, BytesIO(img))})
 
     def on_error(self, status_code, data):
         print status_code
