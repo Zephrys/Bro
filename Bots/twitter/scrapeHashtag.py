@@ -71,9 +71,13 @@ class HashStreamer(TwythonStreamer):
 
             print '[%s]: %s' %(datetime.datetime.now(), status)
             img = requests.get(image).content
-
-            t.post('statuses/update_with_media', params={'status': status},
-                files= {'media': (image, BytesIO(img))})
+            image_file = open('temp.png', 'w')
+            image_file.write(img)
+            image_file.close()
+            image_file = open('temp.png', 'rb')
+            response = t.upload_media(media=image_file)
+            t.update_status(status=status, media_ids=[response['media_id']])
+            image_file.close()
 
     def on_error(self, status_code, data):
         print status_code
