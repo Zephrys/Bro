@@ -66,18 +66,15 @@ class HashStreamer(TwythonStreamer):
                         'nick': data['user']['screen_name'], 'timestamp': datetime.datetime.now()})
                     status += ' couldnt find a match. hold on!'
 
-            else:
-                status = "@ " + data['user']['screen_name']
-
-            print '[%s]: %s' %(datetime.datetime.now(), status)
-            img = requests.get(image).content
-            image_file = open('temp.png', 'w')
-            image_file.write(img)
-            image_file.close()
-            image_file = open('temp.png', 'rb')
-            response = t.upload_media(media=image_file)
-            t.update_status(status=status, media_ids=[response['media_id']])
-            image_file.close()
+                print '[%s]: %s' %(datetime.datetime.now(), status)
+                img = requests.get(image).content
+                image_file = open('temp.png', 'w')
+                image_file.write(img)
+                image_file.close()
+                image_file = open('temp.png', 'rb')
+                response = t.upload_media(media=image_file)
+                t.update_status(status=status, media_ids=[response['media_id']])
+                image_file.close()
 
     def on_error(self, status_code, data):
         print status_code
@@ -95,8 +92,7 @@ def get_topic_tweets(topic, count):
 def activate_stream():
     stream = HashStreamer(consumer_key, consumer_secret,
                           access_token, access_token_secret)
-
-    stream.statuses.filter(track='#AskBro')
+    stream.statuses.filter(track=['#lunch', '#dinner', '#food', '#breakfast', '#brunch', '#hungry'])
 
 if __name__ == '__main__':
     activate_stream()
