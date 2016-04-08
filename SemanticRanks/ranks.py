@@ -127,7 +127,7 @@ def accumulate(search_query, location):
 
             score_place += score_review
 
-        res.append({'place_url': place['url'], 'image' : place['image'], 
+        res.append({'place_url': place['url'], 'image' : place['image'],
                     'score':  score_place * place_rating/len(reviews)})
 
     return res
@@ -135,9 +135,9 @@ def accumulate(search_query, location):
 
 def integrated(search_query, location, desired_sentiment=1):
 
-    existing_places = result_db.find({'search': search.lower(), 'location': location.lower()})
-    
-    if len(existing_places) > 0:
+    existing_places = result_db.find({'search': search_query.lower(), 'location': location.lower()})
+
+    if existing_places.count()>0:
         return existing_places['url'], existing_places['image']
     else:
         result_places = accumulate(search_query, location)

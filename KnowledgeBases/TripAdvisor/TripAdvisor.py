@@ -40,7 +40,7 @@ def hotelHandler(persistent, response):
 	soup = BeautifulSoup(response.body)
 	urls = [x['href'][:-8] for x in soup('a', {'class': 'review-count'})]
 	ratings = [x['alt'] for x in soup('img', {'class': 'sprite-ratings'})]
-	images  = [x['src'] for x in soup('img', {'class': 'photo_image'}))]
+	images  = [x['src'] for x in soup('img', {'class': 'photo_image'})]
 
 	persistent['urls'] = persistent['urls'] + urls
 	persistent['url_ratings'] = persistent['url_ratings'] + ratings
@@ -130,13 +130,13 @@ def getReviews(keyword, place, entityType):
 	persistent['url_ratings'] = ratings
 	persistent['image_urls'] = images
 
-	for offset in xrange(30, maxOffset+1, 30):
-		persistent['i'] += 1
-		binding = functools.partial(hotelHandler, persistent)
-		url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
-		http_client.fetch(url, binding)
-	if persistent['i'] !=0:
-		ioloop.IOLoop.instance().start()
+	# for offset in xrange(30, maxOffset+1, 30):
+	# 	persistent['i'] += 1
+	# 	binding = functools.partial(hotelHandler, persistent)
+	# 	url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
+	# 	http_client.fetch(url, binding)
+	# if persistent['i'] !=0:
+	# 	ioloop.IOLoop.instance().start()
 
 	print 'Hotels Fetched'
 
@@ -184,3 +184,5 @@ def main(keyword, place, entityType = 'HOTEL'):
 		return True
 	else:
 		return getReviews(keyword, place, entityType)
+
+main('hot dog', 'chicago')
