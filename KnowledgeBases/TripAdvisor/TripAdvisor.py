@@ -184,5 +184,3 @@ def main(keyword, place, entityType = 'HOTEL'):
 		return True
 	else:
 		return getReviews(keyword, place, entityType)
-
-main('hot dog', 'chicago')
