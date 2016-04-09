@@ -130,13 +130,13 @@ def getReviews(keyword, place, entityType):
 	persistent['url_ratings'] = ratings
 	persistent['image_urls'] = images
 
-	# for offset in xrange(30, maxOffset+1, 30):
-	# 	persistent['i'] += 1
-	# 	binding = functools.partial(hotelHandler, persistent)
-	# 	url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
-	# 	http_client.fetch(url, binding)
-	# if persistent['i'] !=0:
-	# 	ioloop.IOLoop.instance().start()
+	for offset in xrange(30, maxOffset+1, 30):
+		persistent['i'] += 1
+		binding = functools.partial(hotelHandler, persistent)
+		url = "https://www.tripadvisor.in/Search?q=%s&geo=%s&actionType=updatePage&ssrc=%s&o=%d&ajax=search" %(quote(keyword, safe=''), tripadvisor_code, entityMap[entityType], offset)
+		http_client.fetch(url, binding)
+	if persistent['i'] !=0:
+		ioloop.IOLoop.instance().start()
 
 	print 'Hotels Fetched'
 

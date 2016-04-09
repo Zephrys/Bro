@@ -127,8 +127,9 @@ def accumulate(search_query, location):
 
             score_place += score_review
 
-        res.append({'place_url': place['url'], 'image' : place['image'],
-                    'score':  score_place * place_rating/len(reviews)})
+            if len(reviews) > 0:
+                res.append({'place_url': place['url'], 'image' : place['image'],
+                            'score':  score_place * place_rating/len(reviews)})
 
     return res
 

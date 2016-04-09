@@ -92,7 +92,7 @@ def get_topic_tweets(topic, count):
 def activate_stream():
     stream = HashStreamer(consumer_key, consumer_secret,
                           access_token, access_token_secret)
-    stream.statuses.filter(track=['#lunch', '#dinner', '#food', '#breakfast', '#brunch', '#hungry'])
+    stream.statuses.filter(track=['#AskBro'])
 
 if __name__ == '__main__':
     activate_stream()
