@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from __future__ import division
 import nltk
+import math
 from nltk.tag.perceptron import PerceptronTagger
 from nltk.corpus import stopwords
 import enchant
@@ -114,10 +115,9 @@ def accumulate(search_query, location):
                 if p.singular_noun(search):
                     search = p.singular_noun(search)
                 try:
-                    review_adjectives = strip_proppers_POS(review_text,
-                                                           search)[0]
-                    adj_count = strip_proppers_POS(review_text, search)[1]
-
+                    (review_adjectives, adj_count) = strip_proppers_POS(review_text,
+                                                                        search)
+                    
                     for i in review_adjectives:
                         score_review += i[1]
 
@@ -128,7 +128,7 @@ def accumulate(search_query, location):
             score_place += score_review
 
         res.append({'place_url': place['url'], 'image' : place['image'],
-                    'score':  score_place * place_rating/len(reviews)})
+                    'score':  score_place * place_rating/math.log(1+len(reviews))})
 
     return res
 
