@@ -126,10 +126,11 @@ def accumulate(search_query, location):
                     continue
 
             score_place += score_review
-
-        res.append({'place_url': place['url'], 'image' : place['image'],
+        try:
+            res.append({'place_url': place['url'], 'image' : place['image'],
                     'score':  score_place * place_rating/math.log(1+len(reviews))})
-
+        except:
+            pass
     return res
 
 
